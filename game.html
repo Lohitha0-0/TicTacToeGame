@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tic Tac Toe Game</title>
+
+  <!-- 🎊 Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    body {
+      background-color: #722F37;
+      color: #EFDFBB;
+      font-family: 'Georgia', serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    select {
+      margin-bottom: 15px;
+      padding: 8px 12px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: none;
+      background-color: #EFDFBB;
+      color: #722F37;
+      font-weight: bold;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 10px;
+    }
+
+    .cell {
+      background-color: #EFDFBB;
+      color: #722F37;
+      font-size: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+
+    .cell:hover {
+      transform: scale(1.05);
+      background-color: #f3e3c2;
+    }
+
+    .cell.animate {
+      animation: pop 0.3s ease;
+    }
+
+    .cell.winner {
+      background-color: #e7cfa7;
+      box-shadow: 0 0 12px 4px #fff3e6;
+      animation: bounce 0.4s ease infinite alternate, glow 1s ease-in-out infinite alternate;
+    }
+
+    .cell.draw {
+      animation: drawPulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.6); opacity: 0; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes bounce {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.2); }
+    }
+
+    @keyframes glow {
+      0% { box-shadow: 0 0 5px 2px #fff3e6; }
+      100% { box-shadow: 0 0 15px 6px #fff3e6; }
+    }
+
+    @keyframes drawPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+    }
+
+    .status {
+      margin-top: 20px;
+      font-size: 1.3rem;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      animation: resultText 0.4s ease-in-out;
+    }
+
+    @keyframes resultText {
+      0% { transform: scale(0.9); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .reset-btn {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #EFDFBB;
+      color: #722F37;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .reset-btn:hover {
+      background-color: #f3e3c2;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tic Tac Toe</h1>
+
+  <!-- Mode Selection -->
+  <select id="mode" onchange="resetGame()">
+    <option value="pvp">2 Player</option>
+    <option value="ai">Play vs AI</option>
+  </select>
+
+  <!-- Game Board -->
+  <div class="board" id="board"></div>
+
+  <!-- Status Text -->
+  <div class="status" id="status">Player X's turn</div>
+
+  <!-- Reset Button -->
+  <button class="reset-btn" onclick="resetGame()">Reset</button>
+
+  <!-- Script Logic -->
+  <script>
+    const board = document.getElementById("board");
+    const statusText = document.getElementById("status");
+    const modeSelect = document.getElementById("mode");
+
+    let currentPlayer = "X";
+    let gameState = Array(9).fill(null);
+    let gameActive = true;
+    let cells = [];
+
+    const winPatterns = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    function checkWinner() {
+      for (const pattern of winPatterns) {
+        const [a, b, c] = pattern;
+        if (gameState[a] && gameState[a] === gameState[b] && gameState[b] === gameState[c]) {
+          return pattern;
+        }
+      }
+      return gameState.includes(null) ? null : "Draw";
+    }
+
+    function handleClick(index, cell) {
+      if (!gameActive || gameState[index]) return;
+
+      makeMove(index, currentPlayer);
+
+      const result = checkWinner();
+      if (handleGameEnd(result)) return;
+
+      currentPlayer = currentPlayer === "X" ? "O" : "X";
+
+      if (modeSelect.value === "ai" && currentPlayer === "O") {
+        setTimeout(aiMove, 500);
+      } else {
+        statusText.textContent = `Player ${currentPlayer}'s turn`;
+      }
+    }
+
+    function aiMove() {
+      const emptyIndices = gameState.map((val, i) => val ? null : i).filter(i => i !== null);
+      if (emptyIndices.length === 0 || !gameActive) return;
+
+      const randomIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+      makeMove(randomIndex, "O");
+
+      const result = checkWinner();
+      if (handleGameEnd(result)) return;
+
+      currentPlayer = "X";
+      statusText.textContent = `Player ${currentPlayer}'s turn`;
+    }
+
+    function makeMove(index, player) {
+      gameState[index] = player;
+      cells[index].textContent = player;
+      cells[index].classList.add("animate");
+    }
+
+    function handleGameEnd(result) {
+      if (result) {
+        gameActive = false;
+
+        if (result === "Draw") {
+          statusText.textContent = "🤝 It's a Draw!";
+          cells.forEach(cell => cell.classList.add("draw"));
+          launchConfetti();
+        } else {
+          statusText.textContent = `🏆 Player ${currentPlayer} Wins!`;
+          result.forEach(i => cells[i].classList.add("winner"));
+          launchConfetti();
+        }
+        return true;
+      }
+      return false;
+    }
+
+    function resetGame() {
+      gameState = Array(9).fill(null);
+      currentPlayer = "X";
+      gameActive = true;
+      statusText.textContent = `Player ${currentPlayer}'s turn`;
+
+      cells.forEach((cell) => {
+        cell.textContent = "";
+        cell.classList.remove("animate", "winner", "draw");
+      });
+
+      if (modeSelect.value === "ai" && currentPlayer === "O") {
+        setTimeout(aiMove, 500);
+      }
+    }
+
+    function renderBoard() {
+      board.innerHTML = "";
+      cells = [];
+
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.addEventListener("click", () => handleClick(i, cell));
+        board.appendChild(cell);
+        cells.push(cell);
+      }
+    }
+
+    function launchConfetti() {
+      const duration = 2000;
+      const end = Date.now() + duration;
+
+      (function frame() {
+        confetti({
+          particleCount: 6,
+          angle: 60,
+          spread: 75,
+          origin: { x: 0 },
+          colors: ['#EFDFBB', '#722F37']
+        });
+        confetti({
+          particleCount: 6,
+          angle: 120,
+          spread: 75,
+          origin: { x: 1 },
+          colors: ['#EFDFBB', '#722F37']
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      })();
+    }
+
+    renderBoard();
+  </script>
+</body>
+</html>

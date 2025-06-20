@@ -1,0 +1,20 @@
+{
+  "name": "Tic-Tac-Toe-Game",
+  "version": "1.0.0",
+  "description": "A fun desktop Tic Tac Toe game built with Electron",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "electron",
+    "tic-tac-toe",
+    "desktop-app",
+    "game"
+  ],
+  "author": "M.Lohitha Reddy",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.2.3"
+  }
+}

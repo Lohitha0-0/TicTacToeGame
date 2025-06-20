@@ -1,0 +1,10 @@
+node_modules/
+.DS_Store
+*.log
+out/
+dist/
+*.exe
+*.png
+*.jpg
+*.psd
+*.mp4
