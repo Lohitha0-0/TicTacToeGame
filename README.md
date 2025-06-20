@@ -27,9 +27,9 @@ A modern and minimal **Tic Tac Toe** game built using **ElectronJS**, styled wit
     ```bash
     npm install --save-dev @electron-forge/cli
     npx electron-forge import
-   Then build it:
-   ```bash
-   npm run make
+Then build it:
+    ```bash
+    npm run make
 
 
 This project was built as a fun experiment to explore desktop app development with beautiful UI themes and basic game logic.
